@@ -9,7 +9,7 @@ ENV MESSAGE_TIMESTAMP_VERSION=3.6.x-3195a55a
 ENV TOP_VERSION=3.6.x-2d253d39
 
 RUN \
-  apk --update add bash coreutils curl erlang erlang-asn1 erlang-crypto erlang-eldap erlang-erts erlang-inets erlang-mnesia erlang-os-mon erlang-public-key erlang-sasl erlang-ssl erlang-syntax-tools erlang-xmerl xz && \
+  apk --update add gettext bash coreutils curl erlang erlang-asn1 erlang-crypto erlang-eldap erlang-erts erlang-inets erlang-mnesia erlang-os-mon erlang-public-key erlang-sasl erlang-ssl erlang-syntax-tools erlang-xmerl xz && \
   curl -sL -o /tmp/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.gz https://www.rabbitmq.com/releases/rabbitmq-server/v${RABBITMQ_VERSION}/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz && \
   cd /usr/lib/ && \
   tar xf /tmp/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.gz && \
@@ -43,11 +43,13 @@ ENV RABBITMQ_MNESIA_DIR=/var/lib/rabbitmq/mnesia
 ENV RABBITMQ_PID_FILE=/var/lib/rabbitmq/rabbitmq.pid
 ENV RABBITMQ_PLUGINS_DIR=/usr/lib/rabbitmq/plugins
 ENV RABBITMQ_PLUGINS_EXPAND_DIR=/var/lib/rabbitmq/plugins
+ENV RABBITMQ_DEFAULT_USER=guest
+ENV RABBITMQ_DEFAULT_PASS=guest
 
 # Fetch the external plugins and setup RabbitMQ
 RUN \
   apk --purge del curl tar gzip xz && \
-  chown rabbitmq /var/lib/rabbitmq/.erlang.cookie /var/lib/rabbitmq /usr/lib/rabbitmq && \
+  chown -R rabbitmq /var/lib/rabbitmq/.erlang.cookie /var/lib/rabbitmq /usr/lib/rabbitmq && \
   chmod 0600 /var/lib/rabbitmq/.erlang.cookie && \
   rabbitmq-plugins enable --offline \
         autocluster \
@@ -71,4 +73,6 @@ RUN \
 EXPOSE 4369 5671 5672 15672 25672
 
 USER rabbitmq
-CMD /usr/lib/rabbitmq/sbin/rabbitmq-server
+COPY docker-entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["rabbitmq-server"]
